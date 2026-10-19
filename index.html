@@ -22,14 +22,18 @@
                     <button id="google-login" class="auth-button" type="button">Iniciar sesión con Google</button>
                     <button id="google-logout" class="auth-button auth-button-secondary" type="button" hidden>Cerrar sesión</button>
                 </div>
+                <div class="reminder-controls" hidden>
+                    <button id="enable-reminders" class="auth-button auth-button-secondary" type="button">Activar aviso del navegador</button>
+                    <p id="reminder-status" role="status" aria-live="polite">El aviso requiere mantener esta página abierta.</p>
+                </div>
             </div>
         </header>
 
         <section class="calendar-toolbar" aria-label="Controles del calendario">
             <div class="calendar-views" role="group" aria-label="Vista del calendario">
+                <button class="view-button" type="button" data-view="day" aria-pressed="false">Día</button>
                 <button class="view-button" type="button" data-view="week" aria-pressed="true">Semana</button>
                 <button class="view-button" type="button" data-view="month" aria-pressed="false">Mes</button>
-                <button class="view-button" type="button" data-view="day" aria-pressed="false">Día</button>
             </div>
             <div class="calendar-navigation">
                 <button id="previous-period" class="nav-button" type="button" aria-label="Periodo anterior">Anterior</button>
