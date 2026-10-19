@@ -28,6 +28,18 @@ const googleLogout = document.querySelector("#google-logout");
 const accountStatus = document.querySelector("#account-status");
 const bookingStatus = document.querySelector("#booking-status");
 const slots = new Map();
+const weekdayNames = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+const weekHeaders = [...document.querySelectorAll("thead th[data-day]")];
+const viewButtons = [...document.querySelectorAll(".view-button")];
+const calendarPeriod = document.querySelector("#calendar-period");
+const weekView = document.querySelector("#week-view");
+const monthView = document.querySelector("#month-view");
+const dayView = document.querySelector("#day-view");
+const monthGrid = document.querySelector("#month-grid");
+const dayHeading = document.querySelector("#day-heading");
+const daySlots = document.querySelector("#day-slots");
+let currentView = "week";
+let currentDate = new Date();
 let currentUser = null;
 let unsubscribeSlots = null;
 let unsubscribeReservations = null;
@@ -40,7 +52,6 @@ function createSlotId(day, time) {
 
 function renderSlot(slot) {
   const remaining = Math.max(0, CAPACITY - slot.booked);
-  const button = slot.button;
   const state = slot.myReservation
     ? "is-reserved"
     : remaining === 0
@@ -49,21 +60,23 @@ function renderSlot(slot) {
         ? "is-few"
         : "is-open";
 
-  button.className = `slot-button ${state}`;
-  button.disabled = !currentUser || !slot.ready || (remaining === 0 && !slot.myReservation);
-  button.textContent = slot.myReservation
-    ? "Cancelar reserva"
-    : remaining === 0
-      ? "Completo"
-      : `Reservar · ${remaining} ${remaining === 1 ? "lugar" : "lugares"}`;
-  button.setAttribute(
-    "aria-label",
-    slot.myReservation
-      ? `Cancelar reserva del ${slot.day} de ${slot.time}`
+  for (const button of slot.buttons) {
+    button.className = `slot-button ${state}`;
+    button.disabled = !currentUser || !slot.ready || (remaining === 0 && !slot.myReservation);
+    button.textContent = slot.myReservation
+      ? "Cancelar reserva"
       : remaining === 0
-        ? `${slot.day}, ${slot.time}: horario completo, 5 de 5 personas`
-        : `${slot.day}, ${slot.time}: quedan ${remaining} de 5 plazas`
-  );
+        ? "Completo"
+        : `Reservar · ${remaining} ${remaining === 1 ? "lugar" : "lugares"}`;
+    button.setAttribute(
+      "aria-label",
+      slot.myReservation
+        ? `Cancelar reserva semanal del ${slot.day} de ${slot.time}`
+        : remaining === 0
+          ? `${slot.day}, ${slot.time}: horario semanal completo, 5 de 5 personas`
+          : `${slot.day}, ${slot.time}: quedan ${remaining} de 5 plazas cada semana`
+    );
+  }
 }
 
 function setStatus(message) {
@@ -84,6 +97,154 @@ function getErrorMessage(error) {
     return "Firebase rechazó la operación. Revisa las reglas de Firestore.";
   }
   return "No se pudo completar la operación. Comprueba tu conexión e inténtalo otra vez.";
+}
+
+function getWeekStart(date) {
+  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+  return start;
+}
+
+function formatDate(date, options) {
+  return new Intl.DateTimeFormat("es-CL", options).format(date);
+}
+
+function createSlotButton(slot) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.addEventListener("click", () => handleSlotClick(slot));
+  slot.buttons.add(button);
+  renderSlot(slot);
+  return button;
+}
+
+function renderWeek() {
+  const start = getWeekStart(currentDate);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 4);
+  calendarPeriod.textContent = `${formatDate(start, { day: "numeric", month: "short" })} – ${formatDate(end, { day: "numeric", month: "short", year: "numeric" })}`;
+
+  for (const [index, header] of weekHeaders.entries()) {
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
+    header.textContent = `${header.dataset.day} ${date.getDate()}`;
+  }
+}
+
+function renderMonth() {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const leadingDays = (firstDay.getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const cellCount = Math.ceil((leadingDays + daysInMonth) / 7) * 7;
+  const today = new Date();
+
+  calendarPeriod.textContent = formatDate(currentDate, { month: "long", year: "numeric" });
+  monthGrid.replaceChildren();
+
+  for (const name of ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]) {
+    const heading = document.createElement("div");
+    heading.className = "month-weekday";
+    heading.setAttribute("role", "columnheader");
+    heading.textContent = name;
+    monthGrid.append(heading);
+  }
+
+  for (let index = 0; index < cellCount; index += 1) {
+    const date = new Date(year, month, index - leadingDays + 1);
+    const weekday = weekdayNames[date.getDay()];
+    const recurringSlots = [...slots.values()].filter((slot) => slot.day === weekday);
+    const isCurrentMonth = date.getMonth() === month;
+    const isToday = date.toDateString() === today.toDateString();
+    const isSelected = date.toDateString() === currentDate.toDateString();
+    const dayButton = document.createElement("button");
+    const dateNumber = document.createElement("span");
+    const summary = document.createElement("span");
+
+    dayButton.type = "button";
+    dayButton.className = "calendar-day";
+    if (!isCurrentMonth) dayButton.classList.add("is-outside");
+    if (isToday) dayButton.classList.add("is-today");
+    if (isSelected) dayButton.classList.add("is-selected");
+    dayButton.setAttribute("role", "gridcell");
+    dayButton.setAttribute("aria-label", `${formatDate(date, { weekday: "long", day: "numeric", month: "long" })}, ${recurringSlots.length} horarios semanales`);
+
+    dateNumber.className = "calendar-date";
+    dateNumber.textContent = String(date.getDate());
+    summary.className = "calendar-day-summary";
+    summary.textContent = recurringSlots.length
+      ? `${recurringSlots.length} horarios · semanal`
+      : "Sin horarios";
+
+    dayButton.append(dateNumber, summary);
+    dayButton.addEventListener("click", () => {
+      currentDate = date;
+      currentView = "day";
+      renderCalendar();
+    });
+    monthGrid.append(dayButton);
+  }
+}
+
+function renderDay() {
+  calendarPeriod.textContent = formatDate(currentDate, { day: "numeric", month: "short", year: "numeric" });
+  dayHeading.textContent = formatDate(currentDate, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
+  for (const slot of slots.values()) {
+    for (const button of [...slot.buttons]) {
+      if (daySlots.contains(button)) slot.buttons.delete(button);
+    }
+  }
+  daySlots.replaceChildren();
+
+  const day = weekdayNames[currentDate.getDay()];
+  const dailySlots = [...slots.values()].filter((slot) => slot.day === day);
+
+  if (!dailySlots.length) {
+    const message = document.createElement("p");
+    message.className = "no-sessions";
+    message.textContent = "No hay horarios disponibles para este día.";
+    daySlots.append(message);
+    return;
+  }
+
+  for (const slot of dailySlots) {
+    const row = document.createElement("div");
+    const time = document.createElement("span");
+    row.className = "day-slot-row";
+    time.className = "day-slot-time";
+    time.textContent = `${slot.time} · cada semana`;
+    row.append(time, createSlotButton(slot));
+    daySlots.append(row);
+  }
+}
+
+function renderCalendar() {
+  weekView.hidden = currentView !== "week";
+  monthView.hidden = currentView !== "month";
+  dayView.hidden = currentView !== "day";
+
+  for (const button of viewButtons) {
+    button.setAttribute("aria-pressed", String(button.dataset.view === currentView));
+  }
+
+  if (currentView === "week") renderWeek();
+  if (currentView === "month") renderMonth();
+  if (currentView === "day") renderDay();
+}
+
+function moveCalendarPeriod(amount) {
+  if (currentView === "week") {
+    currentDate.setDate(currentDate.getDate() + amount * 7);
+  } else if (currentView === "day") {
+    currentDate.setDate(currentDate.getDate() + amount);
+  } else {
+    const targetMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + amount, 1);
+    const lastDay = new Date(targetMonth.getFullYear(), targetMonth.getMonth() + 1, 0).getDate();
+    currentDate = new Date(targetMonth.getFullYear(), targetMonth.getMonth(), Math.min(currentDate.getDate(), lastDay));
+  }
+  renderCalendar();
 }
 
 async function ensureSlotExists(slot) {
@@ -170,8 +331,7 @@ for (const row of document.querySelectorAll("tbody tr")) {
   const time = row.cells[0].textContent.trim();
 
   for (const cell of [...row.cells].slice(1)) {
-    const day = document.querySelectorAll("thead th")[cell.cellIndex].textContent.trim();
-    const button = document.createElement("button");
+    const day = weekHeaders[cell.cellIndex - 1].dataset.day;
     const slot = {
       id: createSlotId(day, time),
       day,
@@ -179,16 +339,29 @@ for (const row of document.querySelectorAll("tbody tr")) {
       booked: 0,
       ready: false,
       myReservation: false,
-      button
+      buttons: new Set()
     };
 
-    button.type = "button";
-    button.addEventListener("click", () => handleSlotClick(slot));
-    cell.replaceChildren(button);
+    cell.replaceChildren(createSlotButton(slot));
     slots.set(slot.id, slot);
-    renderSlot(slot);
   }
 }
+
+for (const button of viewButtons) {
+  button.addEventListener("click", () => {
+    currentView = button.dataset.view;
+    renderCalendar();
+  });
+}
+
+document.querySelector("#previous-period").addEventListener("click", () => moveCalendarPeriod(-1));
+document.querySelector("#next-period").addEventListener("click", () => moveCalendarPeriod(1));
+document.querySelector("#today-button").addEventListener("click", () => {
+  currentDate = new Date();
+  renderCalendar();
+});
+
+renderCalendar();
 
 googleLogin.addEventListener("click", async () => {
   googleLogin.disabled = true;

@@ -25,63 +25,68 @@
             </div>
         </header>
 
-        <div class="table-scroll" role="region" aria-label="Horarios disponibles, desplazable horizontalmente" tabindex="0">
-            <table>
-                <caption>Selecciona un horario para reservar una plaza</caption>
-                <thead>
-                    <tr>
-                        <th scope="col">Hora</th>
-                        <th scope="col">Lunes</th>
-                        <th scope="col">Martes</th>
-                        <th scope="col">Miércoles</th>
-                        <th scope="col">Jueves</th>
-                        <th scope="col">Viernes</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th scope="row">10:00–11:00</th>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <th scope="row">11:00–12:00</th>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <th scope="row">12:00–13:00</th>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <th scope="row">13:00–14:00</th>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <th scope="row">14:00–15:00</th>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                </tbody>
-            </table>
+        <section class="calendar-toolbar" aria-label="Controles del calendario">
+            <div class="calendar-views" role="group" aria-label="Vista del calendario">
+                <button class="view-button" type="button" data-view="week" aria-pressed="true">Semana</button>
+                <button class="view-button" type="button" data-view="month" aria-pressed="false">Mes</button>
+                <button class="view-button" type="button" data-view="day" aria-pressed="false">Día</button>
+            </div>
+            <div class="calendar-navigation">
+                <button id="previous-period" class="nav-button" type="button" aria-label="Periodo anterior">Anterior</button>
+                <p id="calendar-period" aria-live="polite"></p>
+                <button id="next-period" class="nav-button" type="button" aria-label="Periodo siguiente">Siguiente</button>
+                <button id="today-button" class="nav-button nav-button-secondary" type="button">Hoy</button>
+            </div>
         </div>
+
+        <section id="week-view" class="calendar-view">
+            <div class="table-scroll" role="region" aria-label="Horarios semanales, desplazable horizontalmente" tabindex="0">
+                <table>
+                    <caption>Los horarios y reservas se repiten cada semana</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Hora</th>
+                            <th scope="col" data-day="Lunes">Lunes</th>
+                            <th scope="col" data-day="Martes">Martes</th>
+                            <th scope="col" data-day="Miércoles">Miércoles</th>
+                            <th scope="col" data-day="Jueves">Jueves</th>
+                            <th scope="col" data-day="Viernes">Viernes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">10:00–11:00</th>
+                            <td></td><td></td><td></td><td></td><td></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">11:00–12:00</th>
+                            <td></td><td></td><td></td><td></td><td></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">12:00–13:00</th>
+                            <td></td><td></td><td></td><td></td><td></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">13:00–14:00</th>
+                            <td></td><td></td><td></td><td></td><td></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">14:00–15:00</th>
+                            <td></td><td></td><td></td><td></td><td></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="month-view" class="calendar-view" aria-label="Calendario mensual" hidden>
+            <div id="month-grid" class="month-grid"></div>
+        </section>
+
+        <section id="day-view" class="calendar-view" aria-labelledby="day-heading" hidden>
+            <h2 id="day-heading"></h2>
+            <div id="day-slots" class="day-slots"></div>
+        </section>
 
         <footer class="schedule-footer">
             <div class="legend" aria-label="Estados de disponibilidad">
