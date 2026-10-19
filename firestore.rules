@@ -52,7 +52,11 @@ service cloud.firestore {
     }
 
     match /reservations/{reservationId} {
-      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow get: if signedIn()
+        && reservationId.matches("^.+_" + request.auth.uid + "$");
+
+      allow list: if signedIn()
+        && resource.data.uid == request.auth.uid;
 
       allow create: if signedIn()
         && request.resource.data.keys().hasOnly(["slotId", "uid", "day", "time", "createdAt"])
