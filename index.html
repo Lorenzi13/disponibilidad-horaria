@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disponibilidad semanal | Reserva de horarios</title>
+    <meta name="description" content="Consulta horarios semanales y reserva una plaza en sesiones de 60 minutos, con un máximo de cinco personas por horario.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://lorenzi13.github.io/disponibilidad-horaria/">
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js" type="module"></script>
+</head>
+<body>
+    <main class="schedule">
+        <header class="schedule-header">
+            <p class="eyebrow">AGENDA SEMANAL</p>
+            <h1>Disponibilidad</h1>
+            <p class="schedule-details">Lunes a viernes <span aria-hidden="true">·</span> Sesiones de 60 minutos <span aria-hidden="true">·</span> Máximo 5 personas</p>
+            <div class="auth-panel">
+                <p id="account-status" role="status" aria-live="polite">Conecta con Google para reservar.</p>
+                <div class="auth-actions">
+                    <button id="google-login" class="auth-button" type="button">Iniciar sesión con Google</button>
+                    <button id="google-logout" class="auth-button auth-button-secondary" type="button" hidden>Cerrar sesión</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="table-scroll" role="region" aria-label="Horarios disponibles, desplazable horizontalmente" tabindex="0">
+            <table>
+                <caption>Selecciona un horario para reservar una plaza</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Hora</th>
+                        <th scope="col">Lunes</th>
+                        <th scope="col">Martes</th>
+                        <th scope="col">Miércoles</th>
+                        <th scope="col">Jueves</th>
+                        <th scope="col">Viernes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row">10:00–11:00</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th scope="row">11:00–12:00</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th scope="row">12:00–13:00</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th scope="row">13:00–14:00</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th scope="row">14:00–15:00</th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <footer class="schedule-footer">
+            <div class="legend" aria-label="Estados de disponibilidad">
+                <span><i class="legend-dot open"></i>Disponible</span>
+                <span><i class="legend-dot few"></i>Últimas plazas</span>
+                <span><i class="legend-dot full"></i>Completo</span>
+            </div>
+            <p id="booking-status" role="status" aria-live="polite">Inicia sesión para ver y reservar plazas.</p>
+        </footer>
+    </main>
+</body>
+</html>

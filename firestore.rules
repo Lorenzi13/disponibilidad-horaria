@@ -1,0 +1,82 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function slotPath(slotId) {
+      return /databases/$(database)/documents/slots/$(slotId);
+    }
+
+    function reservationPath(slotId, uid) {
+      return /databases/$(database)/documents/reservations/$(slotId + "_" + uid);
+    }
+
+    match /slots/{slotId} {
+      allow read: if signedIn();
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(["day", "time", "booked", "capacity"])
+        && request.resource.data.keys().hasAll(["day", "time", "booked", "capacity"])
+        && request.resource.data.day in ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
+        && request.resource.data.time in ["10:00–11:00", "11:00–12:00", "12:00–13:00", "13:00–14:00", "14:00–15:00"]
+        && request.resource.data.booked == 0
+        && request.resource.data.capacity == 5;
+
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["booked"])
+        && request.resource.data.booked is int
+        && resource.data.booked is int
+        && (
+          (
+            request.resource.data.booked == resource.data.booked + 1
+            && request.resource.data.booked <= resource.data.capacity
+            && !exists(reservationPath(slotId, request.auth.uid))
+            && existsAfter(reservationPath(slotId, request.auth.uid))
+            && getAfter(reservationPath(slotId, request.auth.uid)).data.slotId == slotId
+            && getAfter(reservationPath(slotId, request.auth.uid)).data.uid == request.auth.uid
+          )
+          ||
+          (
+            request.resource.data.booked == resource.data.booked - 1
+            && request.resource.data.booked >= 0
+            && exists(reservationPath(slotId, request.auth.uid))
+            && !existsAfter(reservationPath(slotId, request.auth.uid))
+            && get(reservationPath(slotId, request.auth.uid)).data.uid == request.auth.uid
+          )
+        );
+
+      allow delete: if false;
+    }
+
+    match /reservations/{reservationId} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(["slotId", "uid", "day", "time", "createdAt"])
+        && request.resource.data.keys().hasAll(["slotId", "uid", "day", "time", "createdAt"])
+        && request.resource.data.slotId is string
+        && reservationId == request.resource.data.slotId + "_" + request.auth.uid
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.day in ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
+        && request.resource.data.time in ["10:00–11:00", "11:00–12:00", "12:00–13:00", "13:00–14:00", "14:00–15:00"]
+        && request.resource.data.createdAt == request.time
+        && exists(slotPath(request.resource.data.slotId))
+        && getAfter(slotPath(request.resource.data.slotId)).data.booked
+          == get(slotPath(request.resource.data.slotId)).data.booked + 1
+        && getAfter(slotPath(request.resource.data.slotId)).data.day == request.resource.data.day
+        && getAfter(slotPath(request.resource.data.slotId)).data.time == request.resource.data.time;
+
+      allow delete: if signedIn()
+        && resource.data.uid == request.auth.uid
+        && reservationId == resource.data.slotId + "_" + request.auth.uid
+        && exists(slotPath(resource.data.slotId))
+        && getAfter(slotPath(resource.data.slotId)).data.booked
+          == get(slotPath(resource.data.slotId)).data.booked - 1;
+
+      allow update: if false;
+    }
+  }
+}

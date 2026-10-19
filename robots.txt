@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://lorenzi13.github.io/disponibilidad-horaria/sitemap.xml

@@ -1,0 +1,297 @@
+:root {
+  color-scheme: light;
+  --ink: #19332b;
+  --muted: #5b6d66;
+  --line: #d8e1dc;
+  --paper: #ffffff;
+  --page: #f2f6f3;
+  --green: #e5f2eb;
+  --green-ink: #245b42;
+  --yellow: #fff2cc;
+  --yellow-ink: #76520a;
+  --gray: #e9edeb;
+  --gray-ink: #59635e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font-family: "Trebuchet MS", sans-serif;
+}
+
+.schedule {
+  width: min(1160px, 100%);
+  margin: 0 auto;
+  padding: 56px 32px 40px;
+}
+
+.schedule-header {
+  margin-bottom: 30px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: #39765a;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+h1 {
+  margin: 0;
+  font-family: Georgia, serif;
+  font-size: 2.5rem;
+  font-weight: 500;
+}
+
+.schedule-details {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.schedule-details span {
+  padding: 0 6px;
+  color: #82928b;
+}
+
+.auth-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 660px;
+  margin-top: 22px;
+  padding: 14px 16px;
+  border-left: 3px solid #39765a;
+  background: #e8f0eb;
+}
+
+#account-status {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.auth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.auth-button {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid #245b42;
+  border-radius: 4px;
+  background: #245b42;
+  color: #fff;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.auth-button-secondary {
+  border-color: var(--line);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.auth-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.auth-button:focus-visible {
+  outline: 3px solid #27724f;
+  outline-offset: 3px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  scrollbar-color: #a8b8af transparent;
+}
+
+table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+caption {
+  padding: 16px 20px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+thead {
+  background: #edf3ef;
+}
+
+thead th {
+  padding: 14px 12px;
+  color: #40574c;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+thead th:first-child,
+tbody th {
+  width: 170px;
+  padding-left: 20px;
+}
+
+tbody th,
+tbody td {
+  border-top: 1px solid var(--line);
+}
+
+tbody th {
+  color: #40574c;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+tbody td {
+  min-width: 112px;
+  padding: 9px 8px;
+}
+
+.slot-button {
+  width: 100%;
+  min-height: 48px;
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.slot-button.is-open {
+  border-color: #c7dfd1;
+  background: var(--green);
+  color: var(--green-ink);
+}
+
+.slot-button.is-few {
+  border-color: #ead79e;
+  background: var(--yellow);
+  color: var(--yellow-ink);
+}
+
+.slot-button.is-reserved {
+  border-color: #a8c6db;
+  background: #e6f0f7;
+  color: #23516f;
+}
+
+.slot-button.is-full {
+  border-color: #d9dfdc;
+  background: var(--gray);
+  color: var(--gray-ink);
+  cursor: not-allowed;
+}
+
+.slot-button:not(:disabled):hover {
+  border-color: #39765a;
+}
+
+.slot-button:focus-visible,
+.table-scroll:focus-visible {
+  outline: 3px solid #27724f;
+  outline-offset: 3px;
+}
+
+.schedule-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding-top: 20px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.legend-dot.open {
+  background: #4c9a70;
+}
+
+.legend-dot.few {
+  background: #d8a72e;
+}
+
+.legend-dot.full {
+  background: #89948e;
+}
+
+#booking-status {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .schedule {
+    padding: 36px 16px 28px;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  .schedule-details {
+    line-height: 1.7;
+  }
+
+  .auth-panel {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .schedule-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  #booking-status {
+    text-align: left;
+  }
+}
