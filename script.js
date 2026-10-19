@@ -17,6 +17,7 @@ import {
   where
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
+import { createSlotId, nextWeeklyReminder } from "./calendar-utils.js";
 
 const CAPACITY = 5;
 const app = initializeApp(firebaseConfig);
@@ -27,6 +28,9 @@ const googleLogin = document.querySelector("#google-login");
 const googleLogout = document.querySelector("#google-logout");
 const accountStatus = document.querySelector("#account-status");
 const bookingStatus = document.querySelector("#booking-status");
+const reminderControls = document.querySelector(".reminder-controls");
+const reminderButton = document.querySelector("#enable-reminders");
+const reminderStatus = document.querySelector("#reminder-status");
 const slots = new Map();
 const weekdayNames = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 const weekHeaders = [...document.querySelectorAll("thead th[data-day]")];
@@ -43,12 +47,8 @@ let currentDate = new Date();
 let currentUser = null;
 let unsubscribeSlots = null;
 let unsubscribeReservations = null;
-
-function createSlotId(day, time) {
-  const normalizedDay = day.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const normalizedTime = time.replace(/[^0-9]+/g, "-").replace(/-$/, "");
-  return `${normalizedDay}-${normalizedTime}`;
-}
+let reminderTimers = [];
+let userReservedSlotIds = new Set();
 
 function renderSlot(slot) {
   const remaining = Math.max(0, CAPACITY - slot.booked);
@@ -97,6 +97,53 @@ function getErrorMessage(error) {
     return "Firebase rechazó la operación. Revisa las reglas de Firestore.";
   }
   return "No se pudo completar la operación. Comprueba tu conexión e inténtalo otra vez.";
+}
+
+function clearReminderTimers() {
+  for (const timer of reminderTimers) clearTimeout(timer);
+  reminderTimers = [];
+}
+
+function scheduleBrowserReminders() {
+  clearReminderTimers();
+  if (!currentUser) return;
+
+  if (!("Notification" in window)) {
+    reminderStatus.textContent = "Este navegador no admite avisos del navegador.";
+    return;
+  }
+
+  if (Notification.permission !== "granted") {
+    reminderStatus.textContent = "Activa los avisos para recibir el recordatorio una hora antes.";
+    return;
+  }
+
+  const reservedSlots = [...userReservedSlotIds]
+    .map((id) => slots.get(id))
+    .filter(Boolean);
+
+  if (!reservedSlots.length) {
+    reminderStatus.textContent = "No tienes horarios reservados para recordar.";
+    return;
+  }
+
+  reminderStatus.textContent = "Avisos activos mientras esta página permanezca abierta.";
+
+  for (const slot of reservedSlots) {
+    const { meeting, reminder } = nextWeeklyReminder(slot.day, slot.time);
+    const delay = reminder.getTime() - Date.now();
+    const timer = setTimeout(() => {
+      if (!currentUser || Notification.permission !== "granted") return;
+
+      new Notification("Tu reunión comienza en una hora", {
+        body: `${slot.day} a las ${slot.time.split("–")[0]} · participación semanal`,
+        tag: `${slot.id}-${meeting.toISOString()}`
+      });
+      scheduleBrowserReminders();
+    }, delay);
+
+    reminderTimers.push(timer);
+  }
 }
 
 function getWeekStart(date) {
@@ -377,11 +424,25 @@ googleLogin.addEventListener("click", async () => {
 
 googleLogout.addEventListener("click", () => signOut(auth));
 
+reminderButton.addEventListener("click", async () => {
+  if (!("Notification" in window)) {
+    scheduleBrowserReminders();
+    return;
+  }
+
+  const permission = await Notification.requestPermission();
+  reminderStatus.textContent = permission === "granted"
+    ? "Permiso concedido. Preparando tus avisos semanales."
+    : "Permite los avisos en el navegador para recibir recordatorios.";
+  scheduleBrowserReminders();
+});
+
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   googleLogin.hidden = Boolean(user);
   googleLogin.disabled = false;
   googleLogout.hidden = !user;
+  reminderControls.hidden = !user;
 
   unsubscribeSlots?.();
   unsubscribeReservations?.();
@@ -389,6 +450,8 @@ onAuthStateChanged(auth, async (user) => {
   unsubscribeReservations = null;
 
   if (!user) {
+    clearReminderTimers();
+    userReservedSlotIds = new Set();
     accountStatus.textContent = "Conecta con Google para reservar.";
     setStatus("Inicia sesión para ver y reservar plazas.");
     for (const slot of slots.values()) {
@@ -427,6 +490,8 @@ onAuthStateChanged(auth, async (user) => {
         slot.myReservation = reservedSlotIds.has(slot.id);
         renderSlot(slot);
       }
+      userReservedSlotIds = reservedSlotIds;
+      scheduleBrowserReminders();
     }, (error) => setStatus(getErrorMessage(error)));
 
     setStatus("Horarios actualizados. Elige una hora para reservar.");
